@@ -6,21 +6,19 @@
 
 ## 效果
 
-![](http://i.imgur.com/TK6YCh8.png)
+![](http://i.imgur.com/ziinI69.png)
 
 只要您在电脑前，每隔1个小时，都会弹出一次，弹出后您可以随手简单写入这1小时的工作内容，然后按回车键保存。
 
 > 当然，您可以修改时间间隔，完全在于自己。
 
-如果您偷懒点击了 `取消` 或者不小心 `x`，那么会有一次提醒机会，希望大家能坚持。
+如果您偷懒点击了 `取消` 或者不小心点击关闭按钮 `x`，那么会有一次提醒机会，希望大家能坚持。
 
-![](http://i.imgur.com/xNQCr6e.png)
+![](http://i.imgur.com/kDHwSiB.png)
 
-## 易用
+## 使用
 
-1. [可选] 用记事本打开并修改 `ehourlog.vbs` 中，每小时记录的日志存储路径，默认：strDirectory = D:/ehourlog/
-1. 将 `ehourlog.vbs` 加入开机计划，让其每次开机自动启动。
-
-简单2步搞定，第一次运行，你只需要双击一下 `ehourlog.vbs` 即可。
+1. 将 `ehourlog-zh.vbs` 加入开机计划，让其每次开机自动启动。
+1. 第1次运行，你只需要双击一下 `ehourlog-zh.vbs` 即可。
 
 BINGO！

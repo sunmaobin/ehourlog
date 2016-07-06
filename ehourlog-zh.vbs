@@ -1,9 +1,16 @@
-'Reminder
-Const strDirectory = "D:/ehourlog/"
-Const fileEndFlag = ".txt"
-Const strTitle = "定时记录 - 提醒"
-Const strInfo = "亲，忙碌1个小时了，记录一下哦~~"
-Const Interval = .1 '//提醒周期，单位为：分钟
+'==============================================================
+'@ FileDesc      每小时记录（Ehourlog）
+'@ Author        Night<ismb@qq.com>
+'@ LastModified  2016年7月6日09:58:20
+'@ Version       V0.1
+'==============================================================
+
+Const strDirectory = "D:/ehourlog/"                 '日志文件保存目录
+Const fileStartFlag = "ehourlog"                    '日志文件前缀
+Const fileEndFlag = ".md"                           '日志文件后缀，默认是markdown文件格式
+Const strTitle = "每小时记录"                       '弹出框标题
+Const strInfo = "亲，忙碌1个小时了，记录一下哦~~"   '弹出框描述
+Const Interval = 60                                 '提醒周期，单位为：分钟
  
 Dim fso
 Dim ws
@@ -11,8 +18,8 @@ Dim m_strFilename
  
 Sub Createfile(strContext)
  
-    strTimeTitle = Cstr(FormatDateTime(Now,vbGeneralDate))
-    strLogTitle = "<div style='color: red;text-align:right;'>"+strTimeTitle+"</div>"
+    strTimeTitle = Cstr(FormatDateTime(Now,4))
+    strLogTitle = "1. "+strTimeTitle
  
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set stm = CreateObject("Adodb.Stream")
@@ -24,15 +31,16 @@ Sub Createfile(strContext)
     CurTime = Now
     m_strFileName = Cstr(Year(CurTime))+"-"+Cstr(Month(CurTime))+"-"+Cstr(Day(CurTime))
     Dim strfileFullPath
-    strfileFullPath = strDirectory+m_strFileName+fileEndFlag
+    strfileFullPath = strDirectory+fileStartFlag+"-"+m_strFileName+fileEndFlag
 
     If Not fso.FileExists(strfileFullPath) Then
     
           '创建文件
           fso.CreateTextFile(strfileFullPath)
 
-          '打开文件写入空行
+          '打开文件写入这一天的标题
           stm.Open
+          stm.WriteText "## 每小时记录（"+m_strFileName+"）", 1
           stm.WriteText "", 1
           stm.SaveToFile strfileFullPath, 2
           stm.flush
@@ -45,9 +53,7 @@ Sub Createfile(strContext)
     stm.readtext '读取旧的数据
  
     stm.WriteText strLogTitle, 1
- 
-    stm.WriteText "    "+strContext, 1
-    stm.WriteText "------", 1
+    stm.WriteText "   * "+strContext, 1
  
     stm.SaveToFile strfileFullPath, 2
     stm.flush
