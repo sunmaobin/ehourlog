@@ -1,0 +1,43 @@
+{
+  "name": "ehourlog",
+  "version": "1.0.1",
+  "description": "write your log per hour",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder -w"
+  },
+  "author": "Night",
+  "license": "ISC",
+  "build": {
+    "appId": "com.ehourlog.app",
+    "copyright": "Copyright © 2018 ehourlog",
+    "asar": true,
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "nsis": {
+      "artifactName": "${productName}-${version}.${ext}",
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "ia32"
+          ]
+        }
+      ]
+    }
+  },
+  "devDependencies": {
+    "auto-launch": "^5.0.5",
+    "electron": "^2.0.8",
+    "electron-builder": "^20.28.3"
+  }
+}

@@ -1,0 +1,76 @@
+Arguments: 
+  /Users/sunmaobin/.nvm/versions/node/v10.8.0/bin/node /usr/local/Cellar/yarn/1.9.4/libexec/bin/yarn.js add electron-builder --save-dev
+
+PATH: 
+  /Users/sunmaobin/.nvm/versions/node/v10.8.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Applications/VMware Fusion.app/Contents/Public
+
+Yarn version: 
+  1.9.4
+
+Node version: 
+  10.8.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error [ERR_TLS_CERT_ALTNAME_INVALID]: Hostname/IP does not match certificate's altnames: Host: registry.npmjs.org. is not in the cert's altnames: DNS:a.sni.fastly.net, DNS:a.sni.global-ssl.fastly.net
+      at Object.checkServerIdentity (tls.js:230:17)
+      at TLSSocket.onConnectSecure (_tls_wrap.js:1058:27)
+      at TLSSocket.emit (events.js:182:13)
+      at TLSSocket._finishInit (_tls_wrap.js:628:8)
+
+npm manifest: 
+  {
+    "name": "ehourlog",
+    "version": "1.0.1",
+    "description": "write your log per hour",
+    "main": "main.js",
+    "scripts": {
+      "start": "electron .",
+      "build": "electron-builder -w"
+    },
+    "author": "Night",
+    "license": "ISC",
+    "build": {
+      "appId": "com.ehourlog.app",
+      "copyright": "Copyright © 2018 ehourlog",
+      "asar": true,
+        "asarUnpack": [
+          "auto-launch"
+        ],
+      "mac": {
+        "target": [
+          "dmg"
+        ]
+      },
+      "nsis": {
+        "artifactName": "${productName}-${version}.${ext}",
+        "oneClick": false,
+        "perMachine": true,
+        "allowToChangeInstallationDirectory": true,
+        "language": "zh-Hans"
+      },
+      "win": {
+        "target": [
+          {
+            "target": "nsis",
+            "arch": [
+              "ia32"
+            ]
+          }
+        ]
+      }
+    },
+    "devDependencies": {
+      "auto-launch": "^5.0.5",
+      "electron": "^2.0.8"
+    },
+    "dependencies": {}
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
