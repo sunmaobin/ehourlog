@@ -4,10 +4,27 @@ const path = require('path');
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win = null;
+let isForceQuit = false;
+let timer,
+    num;
+
+let urlConfig = {
+    list : 'http://120.76.251.109/ehourlog?t=2',
+    create : 'http://120.76.251.109/ehourlog?t=2#create'
+};
+
+/*urlConfig = {
+    list : 'http://localhost:8010',
+    create : 'http://localhost:8010/#/create'
+};*/
 
 function createWindow () {
   // 创建浏览器窗口。
-  win = new BrowserWindow({width: 400, height: 200});
+  win = new BrowserWindow({
+      width: 800,
+      height: 520,
+      show : false,
+  });
   
   // 当前窗口无菜单
   // 所有窗口无菜单：Menu.setApplicationMenu(null)
@@ -15,14 +32,21 @@ function createWindow () {
   win.setMenu(null);
 
   // 然后加载应用的 index.html。
-  win.loadFile('index.html');
+  win.loadURL(urlConfig.list);
 
   // 打开开发者工具
-  //win.webContents.openDevTools();
+  win.webContents.openDevTools();
 
   win.on('resize', () => {
       win.reload();
   });
+
+    win.on('close', (e) => {
+        if(!isForceQuit){
+            e.preventDefault();
+            win.hide();
+        };
+    });
 
   // 当 window 被关闭，这个事件会被触发。
   win.on('closed', (e) => {
@@ -34,54 +58,100 @@ function createWindow () {
 };
 
 //弹出框
+let child;
 function showWindow (){
-  let child = new BrowserWindow({
-      title : '一小时过去了，休息下，同时记录下~~',
-      width: 400, 
-      height: 300,
+  child = new BrowserWindow({
+      title : '我来了',
+      width: 500,
+      height: 200,
       center : true,
       resizable : false,
       frame: true,//是否有边框
-      minimizable : false,
+      //minimizable : false,
       maximizable : false,
       alwaysOnTop : true, //永远在最上层
       transparent : false, //是否在任务栏中显示窗口
+      show : false,
+      //backgroundColor: '#2e2c29'
     });
 
     child.setMenu(null);
 
-    child.loadFile('dialog.html');
-    child.once('ready-to-show', () => {
+    //打开开发者工具
+    child.webContents.openDevTools();
+
+    child.loadURL(urlConfig.create);
+    /*child.once('ready-to-show', () => {
       child.show()
+    });*/
+
+    child.on('close', (e) => {
+        if(!isForceQuit) {
+            e.preventDefault();
+            child.hide();
+
+            showDialog(function (result) {
+                console.log('dialog-result',result);
+                result ? timeDialog() : (child.webContents.send('msg-show') && child.show());
+            });
+        };
     });
+
+    child.on('closed', (e) => {
+        // 取消引用 window 对象，如果你的应用支持多窗口的话，
+        // 通常会把多个 window 对象存放在一个数组里面，
+        // 与此同时，你应该删除相应的元素。
+        child = null;
+    });
+
+    //开启倒计时
+    timeDialog();
+
+    const {ipcMain} = require('electron');
+
+    ipcMain.on('msg-create', (event, arg) => {
+        child && child.hide();
+        //重新开启倒计时
+        timeDialog();
+        //showNotice('记录成功');
+    });
+
+    ipcMain.on('msg-login', (event, arg) => {
+        console.log('msg-login');
+        win.webContents.send('msg-login');
+        child.webContents.send('msg-login');
+    });
+    
+    return child;
 };
 
 //通知
-function showNotice(){
+function showNotice(msg){
     var myNotice = new Notification({
-       title : 'aaaa2',
-       body : 'bbbbb2'
+       title : 'Ehourlog',
+       body : msg || '淫荡的一天犹豫朝阳般开始了'
     });
     myNotice.show();
 
-    myNotice.on('click', () => {
+    /*myNotice.on('click', () => {
       if (win === null) {
         createWindow();
         return;
       };
       win.isVisible() ? win.hide() : win.show()
-    });
+    });*/
 };
 
 //对话框
-function showDialog(){
+function showDialog(callback){
   dialog.showMessageBox(win,{
-    type : 'info',
-    title : '自定义标题',
-    message : '自定义标题',
-    detail : '这里是额外的信息啊'
-  },function(){
-      console.log(1111);
+    type : 'warning',
+    title : 'Ehourlog',
+    buttons : ['返回记录','确定放弃'],
+    message : '打扰了',
+    detail : "确定放弃这一小时的记录？"
+  },function(response,checkboxChecked){
+      callback && callback(response);
   });
 }
 
@@ -117,20 +187,32 @@ var trayMenu = Menu.buildFromTemplate([{
         });
     }
 },{
+    label: '记录一下',
+    click: function () {
+        if(child){
+            timer && clearInterval(timer);
+            child.webContents.send('msg-show');
+            child.show();
+        };
+    }
+},{
     label: '退出',
     click: function () {
         if (process.platform !== 'darwin') {
-          console.log('系统托盘退出');
+            isForceQuit = true;
           win = null;
+          child = null;
           app.quit();
+            console.log('system logout');
         };
     }
 }]);
-    
-function tray(){
-    const iconPath = path.join(__dirname, 'icon2.png');
 
-    let tray = new Tray(iconPath); 
+let tray;
+function showTray(){
+    const iconPath = path.join(__dirname, 'icon.png');
+
+    tray = new Tray(iconPath);
 
     //设置此托盘图标的悬停提示内容
     tray.setToolTip('This is my application.');
@@ -147,21 +229,36 @@ function tray(){
       };
       win.isVisible() ? win.hide() : win.show()
     });
-    
+
     //自动开机启动
     enableAutoStart();
 };
 
+function timeDialog() {
+    num = 3600;
+    timer && clearInterval(timer);
+    timer = setInterval(() => {
+        num--;
+        //console.log('timer=',num);
+        if(num === 0){
+            tray.setTitle('(waiting)');
+            clearInterval(timer);
+            if(child){
+                child.webContents.send('msg-show');
+                child.show();
+            };
+            return;
+        };
+        tray.setTitle('(' + num + ')');
+    },1000);
+};
+
 function init(){
-    //createWindow ();
+    showNotice();
+    showTray();
 
-    //showWindow();
-
-    tray();
-
-    //showNotice();
-
-    //showDialog();
+    createWindow ();
+    showWindow ();
 };
 
 
@@ -182,7 +279,7 @@ function init(){
     console.log('window-all-closed');
     
     e.preventDefault();
-    e.returnValue = false;
+    xe.returnValue = false;
     return false;
   });
   
