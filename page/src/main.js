@@ -27,14 +27,17 @@ const store = new Vuex.Store({
         token : localStorage.getItem('token')
     },
     mutations : {
-        setToken(state,token){
+        setToken(state, token){
             state.token = token;
-            localStorage.setItem('token',token);
+            localStorage.setItem('token', token);
+        },
+        clearToken(state) {
+            state.token = null;
+            localStorage.removeItem('token');
         }
     },
     getters : {
         getToken : (state) => () => {
-            console.log('getters state=',JSON.parse(state.token));
             if(state.token){
                 return JSON.parse(state.token).userToken;
             };

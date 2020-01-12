@@ -2,21 +2,21 @@
  * Created by Night on 2018/9/10 010.
  */
 
-var express = require('express');
-var app = express();
-var bodyParser = require('body-parser');
-var Sequelize = require('sequelize');
-var session = require('express-session');
-var MySQLStore = require('express-mysql-session')(session);
+const express = require('express');
+const app = express();
+const bodyParser = require('body-parser');
+const Sequelize = require('sequelize');
+const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const crypto = require('crypto');
 
 //session mysql
 var mysqlOption = {
     host: "localhost",
-    user: "root",
-    password: "123456",
+    user: "user",
+    password: "password",
     port: "3306",
-    database: "ehourlog"
+    database: "database"
 };
 
 app.use(session({
@@ -63,6 +63,10 @@ var User = sequelize.define('User', {
     userToken: {
         type: Sequelize.STRING,
         field: 'user_token'
+    },
+    userCompany: {
+        type: Sequelize.STRING,
+        field: 'user_company'
     },
     userCreateTime: {
         type: Sequelize.DATE,
@@ -136,7 +140,7 @@ function aesDecrypt(encrypted) {
 };
 
 app.all('*', function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "http://localhost");
+    res.header("Access-Control-Allow-Origin", "http://120.76.251.109");
     res.header("Access-Control-Allow-Credentials","true");
     res.header("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With");
     res.header("Access-Control-Allow-Methods","POST,GET,OPTIONS");
@@ -175,6 +179,13 @@ app.all('*', function(req, res, next) {
 
         req.session.userInfo = result;
         next();
+    });
+});
+
+app.post('/logout', function(req, res){
+    req.session.userInfo = null;
+    res.json({
+        code : 200
     });
 });
 
@@ -230,7 +241,7 @@ app.post('/createLog', function(req, res){
     Log.create({
         logUserId : req.session.userInfo.userId,
         logContent : aesEncrypt(req.body.logContent),
-        logCompany : 'vivo'
+        logCompany : req.session.userInfo.userCompany
     }).then(function(result){
         res.send({
             code : 200,

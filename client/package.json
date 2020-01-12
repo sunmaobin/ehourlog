@@ -23,7 +23,7 @@
     },
     "mac": {
       "target": [
-        "dmg"
+        "pkg"
       ]
     },
     "win": {

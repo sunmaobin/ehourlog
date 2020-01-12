@@ -40,10 +40,25 @@
             };
         },
         created() {
-            ipcRenderer.on('msg-show', (event, arg) => {
-                this.$refs['logForm'] && this.$refs['logForm'].resetFields();
-                this.$refs.logContent && this.$refs.logContent.$el.children[0].focus();
-            });
+            ipcRenderer
+                .on('msg-show', (event, arg) => {
+                    this.$refs['logForm'] && this.$refs['logForm'].resetFields();
+                    this.$refs.logContent && this.$refs.logContent.$el.children[0].focus();
+                })
+                .on('msg-logout', (event, arg) => {
+                    this.axios.post(config.url.logout).then((response) => {
+                        if (response.data.code !== 200) {
+                            this.$notify({
+                                type: 'error',
+                                message: response.data.msg || '系统错误，请稍后重试',
+                                duration: 3000
+                            });
+                            return;
+                        };
+                        this.$store.commit('clearToken');
+                        this.$router.push('login');
+                    });
+                });
         },
         methods: {
             submit(e) {
@@ -57,6 +72,11 @@
                         userToken : this.$store.getters.getToken(),
                         logContent: this.logData.content,
                     }).then((response) => {
+                        if (response.data.code === 2001) {
+                            this.$store.commit('clearToken');
+                            this.$router.push('login');
+                            return;
+                        };
                         if (response.data.code !== 200) {
                             this.$notify({
                                 type: 'error',

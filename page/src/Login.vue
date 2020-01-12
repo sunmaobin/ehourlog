@@ -71,7 +71,7 @@
 
                         this.$store.commit('setToken',JSON.stringify(response.data.data));
                         this.$router.push({
-                            path : this.$route.query.callback
+                            path : '/create'
                         });
                         ipcRenderer.send('msg-login');
                     });

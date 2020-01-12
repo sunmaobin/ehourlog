@@ -1,6 +1,6 @@
 const {app, dialog, Tray, Menu, Notification, BrowserWindow} = require('electron')
 const path = require('path');
-  
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let win = null;
@@ -9,8 +9,8 @@ let timer,
     num;
 
 let urlConfig = {
-    list : 'http://120.76.251.109/ehourlog?t=2',
-    create : 'http://120.76.251.109/ehourlog?t=2#create'
+    list: `http://120.76.251.109/ehourlog?t=${+new Date()}`,
+    create: `http://120.76.251.109/ehourlog?t=${+new Date()}#create`
 };
 
 /*urlConfig = {
@@ -18,90 +18,102 @@ let urlConfig = {
     create : 'http://localhost:8010/#/create'
 };*/
 
-function createWindow () {
-  // 创建浏览器窗口。
-  win = new BrowserWindow({
-      width: 800,
-      height: 520,
-      show : false,
-  });
-  
-  // 当前窗口无菜单
-  // 所有窗口无菜单：Menu.setApplicationMenu(null)
-  // 隐藏当前窗口菜单，但是按ALT出现，属性：autoHideMenuBar
-  win.setMenu(null);
+function listWin () {
+    // 创建浏览器窗口。
+    win = new BrowserWindow({
+        title : 'Ehourlog',
+        width: 800,
+        height: 520,
+        show : false
+    });
 
-  // 然后加载应用的 index.html。
-  win.loadURL(urlConfig.list);
+    // 当前窗口无菜单
+    // 所有窗口无菜单：Menu.setApplicationMenu(null)
+    // 隐藏当前窗口菜单，但是按ALT出现，属性：autoHideMenuBar
+    win.setMenu(null);
 
-  // 打开开发者工具
-  win.webContents.openDevTools();
+    // 然后加载应用的 index.html。
+    win.loadURL(urlConfig.list);
 
-  win.on('resize', () => {
-      win.reload();
-  });
+    // 打开开发者工具
+    // win.webContents.openDevTools();
+
+    win.on('resize', () => {
+        win.reload();
+    });
 
     win.on('close', (e) => {
-        if(!isForceQuit){
+        console.log('win close');
+        if(isForceQuit){
+           return;
+        };
+
+        // 可见状态下点击关闭
+        if (win.isVisible()) {
             e.preventDefault();
             win.hide();
         };
     });
 
-  // 当 window 被关闭，这个事件会被触发。
-  win.on('closed', (e) => {
-    // 取消引用 window 对象，如果你的应用支持多窗口的话，
-    // 通常会把多个 window 对象存放在一个数组里面，
-    // 与此同时，你应该删除相应的元素。
-    win = null;
-  });
+    // 当 window 被关闭，这个事件会被触发。
+    win.on('closed', (e) => {
+        console.log('win closed');
+        // 取消引用 window 对象，如果你的应用支持多窗口的话，
+        // 通常会把多个 window 对象存放在一个数组里面，
+        // 与此同时，你应该删除相应的元素。
+    });
 };
 
 //弹出框
-let child;
-function showWindow (){
-  child = new BrowserWindow({
-      title : '我来了',
-      width: 500,
-      height: 200,
-      center : true,
-      resizable : false,
-      frame: true,//是否有边框
-      //minimizable : false,
-      maximizable : false,
-      alwaysOnTop : true, //永远在最上层
-      transparent : false, //是否在任务栏中显示窗口
-      show : false,
-      //backgroundColor: '#2e2c29'
+let log;
+function logWin (){
+    log = new BrowserWindow({
+        title : '记录一下',
+        width: 500,
+        height: 200,
+        center : true,
+        resizable : false,
+        frame: true,//是否有边框
+        //minimizable : false,
+        maximizable : false,
+        alwaysOnTop : true, //永远在最上层
+        show : false,
+        //backgroundColor: '#2e2c29'
     });
 
-    child.setMenu(null);
+    log.setMenu(null);
 
-    //打开开发者工具
-    child.webContents.openDevTools();
+    // 打开开发者工具
+    // log.webContents.openDevTools();
 
-    child.loadURL(urlConfig.create);
-    /*child.once('ready-to-show', () => {
-      child.show()
+    log.loadURL(urlConfig.create);
+    /*log.once('ready-to-show', () => {
+      log.show()
     });*/
 
-    child.on('close', (e) => {
-        if(!isForceQuit) {
-            e.preventDefault();
-            child.hide();
+    log.on('close', (e) => {
+        console.log('log close');
 
+        if (isForceQuit) {
+           return;
+        };
+
+        if (log.isVisible()) {
+            e.preventDefault();
             showDialog(function (result) {
-                console.log('dialog-result',result);
-                result ? timeDialog() : (child.webContents.send('msg-show') && child.show());
+                if (result) {
+                    log.hide();
+                    timeDialog();
+                };
             });
         };
     });
 
-    child.on('closed', (e) => {
+    log.on('closed', (e) => {
+        console.log('log closed');
         // 取消引用 window 对象，如果你的应用支持多窗口的话，
         // 通常会把多个 window 对象存放在一个数组里面，
         // 与此同时，你应该删除相应的元素。
-        child = null;
     });
 
     //开启倒计时
@@ -110,7 +122,7 @@ function showWindow (){
     const {ipcMain} = require('electron');
 
     ipcMain.on('msg-create', (event, arg) => {
-        child && child.hide();
+        log && log.hide();
         //重新开启倒计时
         timeDialog();
         //showNotice('记录成功');
@@ -119,23 +131,23 @@ function showWindow (){
     ipcMain.on('msg-login', (event, arg) => {
         console.log('msg-login');
         win.webContents.send('msg-login');
-        child.webContents.send('msg-login');
+        log.webContents.send('msg-login');
     });
-    
-    return child;
+
+    return log;
 };
 
 //通知
 function showNotice(msg){
     var myNotice = new Notification({
-       title : 'Ehourlog',
-       body : msg || '淫荡的一天犹豫朝阳般开始了'
+        title : 'Ehourlog',
+        body : msg || '淫荡的一天犹豫朝阳般开始了'
     });
     myNotice.show();
 
     /*myNotice.on('click', () => {
       if (win === null) {
-        createWindow();
+        listWin();
         return;
       };
       win.isVisible() ? win.hide() : win.show()
@@ -144,15 +156,15 @@ function showNotice(msg){
 
 //对话框
 function showDialog(callback){
-  dialog.showMessageBox(win,{
-    type : 'warning',
-    title : 'Ehourlog',
-    buttons : ['返回记录','确定放弃'],
-    message : '打扰了',
-    detail : "确定放弃这一小时的记录？"
-  },function(response,checkboxChecked){
-      callback && callback(response);
-  });
+    dialog.showMessageBox(log,{
+        type : 'warning',
+        title : 'Ehourlog',
+        buttons : ['返回记录','确定放弃'],
+        message : '打扰了',
+        detail : "确定放弃这一小时的记录？"
+    },function(response,checkboxChecked){
+        callback && callback(response);
+    });
 }
 
 //设置开机启动
@@ -168,7 +180,7 @@ function enableAutoStart() {
             useLaunchAgent: false //是否启用代理启动，默认是AppleScript启动
         }
     });
-    
+
     minecraftAutoLauncher.enable();
 }
 
@@ -186,36 +198,48 @@ var trayMenu = Menu.buildFromTemplate([{
             // handle error
         });
     }
-},{
+},  {
     label: '记录一下',
     click: function () {
-        if(child){
+        if(log){
             timer && clearInterval(timer);
-            child.webContents.send('msg-show');
-            child.show();
+            log.webContents.send('msg-show');
+            log.show();
         };
     }
-},{
-    label: '退出',
+},  {
+    label: '查看记录',
     click: function () {
-        if (process.platform !== 'darwin') {
-            isForceQuit = true;
-          win = null;
-          child = null;
-          app.quit();
-            console.log('system logout');
-        };
+        win &&  win.show();
+    }
+}, {
+    label: '退出账号',
+    click: function () {
+        log.webContents.send('msg-logout');
+        tray.setTitle('60:00');
+        timer && clearInterval(timer);
+        win.hide();
+        log.show();
+    }
+}, {
+    label: '关闭程序',
+    click: function () {
+        isForceQuit = true;
+        win = null;
+        log = null;
+        app.quit();
+        console.log('system logout');
     }
 }]);
 
 let tray;
 function showTray(){
-    const iconPath = path.join(__dirname, 'icon.png');
+    const iconPath = path.join(__dirname, 'tray.png');
 
     tray = new Tray(iconPath);
 
     //设置此托盘图标的悬停提示内容
-    tray.setToolTip('This is my application.');
+    tray.setToolTip('EhourLog');
 
     //console.log(trayMenu);
 
@@ -223,11 +247,11 @@ function showTray(){
     tray.setContextMenu(trayMenu);
 
     tray.on('click', () => {
-      if (win === null) {
-        createWindow();
-        return;
-      };
-      win.isVisible() ? win.hide() : win.show()
+        if (win === null) {
+            listWin();
+            return;
+        };
+        win.isVisible() ? win.hide() : win.show()
     });
 
     //自动开机启动
@@ -235,6 +259,8 @@ function showTray(){
 };
 
 function timeDialog() {
+    console.log('time tray');
+    tray.setTitle('60:00');
     num = 3600;
     timer && clearInterval(timer);
     timer = setInterval(() => {
@@ -243,13 +269,13 @@ function timeDialog() {
         if(num === 0){
             tray.setTitle('(waiting)');
             clearInterval(timer);
-            if(child){
-                child.webContents.send('msg-show');
-                child.show();
+            if(log){
+                log.webContents.send('msg-show');
+                log.show();
             };
             return;
         };
-        tray.setTitle('(' + num + ')');
+        tray.setTitle(`(${~~(num/60)}:${num%60})`);
     },1000);
 };
 
@@ -257,39 +283,49 @@ function init(){
     showNotice();
     showTray();
 
-    createWindow ();
-    showWindow ();
+    listWin ();
+    logWin ();
 };
 
 
-  
-  // Electron 会在初始化后并准备
-  // 创建浏览器窗口时，调用这个函数。
-  // 部分 API 在 ready 事件触发后才能使用。
-  app.on('ready', init);
-  
-  // 当全部窗口关闭时退出。
-  app.on('window-all-closed', (e) => {
+
+// Electron 会在初始化后并准备
+// 创建浏览器窗口时，调用这个函数。
+// 部分 API 在 ready 事件触发后才能使用。
+app.on('ready', init);
+
+// 当全部窗口关闭时退出。
+app.on('window-all-closed', (e) => {
     // 在 macOS 上，除非用户用 Cmd + Q 确定地退出，
     // 否则绝大部分应用及其菜单栏会保持激活。
     //if (process.platform !== 'darwin') {
     //  app.quit()
     //}
-    
+
     console.log('window-all-closed');
-    
+
     e.preventDefault();
-    xe.returnValue = false;
+    e.returnValue = false;
     return false;
-  });
-  
-  app.on('activate', () => {
+});
+
+app.on('activate', () => {
     // 在macOS上，当单击dock图标并且没有其他窗口打开时，
     // 通常在应用程序中重新创建一个窗口。
     if (win === null) {
-      createWindow();
-    }
-  })
-  
-  // 在这个文件中，你可以续写应用剩下主进程代码。
-  // 也可以拆分成几个文件，然后用 require 导入。
+        listWin();
+    };
+});
+
+app.on('before-quit', function (e){
+    if(isForceQuit){
+        return;
+    };
+    win.hide();
+    log.hide();
+    app.dock.hide();
+    e.preventDefault();
+});
+
+// 在这个文件中，你可以续写应用剩下主进程代码。
+// 也可以拆分成几个文件，然后用 require 导入。
